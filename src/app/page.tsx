@@ -34,6 +34,7 @@ export default function Home() {
           messages={chat.messages}
           input={chat.input}
           isLoading={chat.isLoading}
+          thinkingSteps={chat.thinkingSteps}
           onInputChange={chat.setInput}
           onSend={chat.sendMessage}
           onReset={chat.resetChat}

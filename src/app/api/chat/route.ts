@@ -1,42 +1,70 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession, updateSchema, updateChatHistory } from "@/lib/session-store";
+import { NextRequest } from "next/server";
+import {
+  getSession,
+  updateSchema,
+  updateChatHistory,
+} from "@/lib/session-store";
 import { publish } from "@/lib/sse-manager";
-import { processChat } from "@/lib/agent/claude-client";
+import { processChat, StreamEvent } from "@/lib/agent/claude-client";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { sessionId, message } = await request.json();
+  const { sessionId, message } = await request.json();
 
-    if (!sessionId || !message) {
-      return NextResponse.json(
-        { error: "Missing sessionId or message" },
-        { status: 400 }
-      );
-    }
-
-    // Get current session state
-    const { schema, chatHistory } = getSession(sessionId);
-
-    // Process through Claude
-    const { response, updatedSchema, updatedHistory } = await processChat(
-      schema,
-      chatHistory,
-      message
-    );
-
-    // Persist updated schema and chat history
-    updateSchema(sessionId, updatedSchema);
-    updateChatHistory(sessionId, updatedHistory);
-
-    // Push updated schema to all SSE clients for this session
-    publish(sessionId, { schema: updatedSchema });
-
-    return NextResponse.json({ response });
-  } catch (error) {
-    console.error("Chat API error:", error);
-    return NextResponse.json(
-      { error: "Failed to process message" },
-      { status: 500 }
+  if (!sessionId || !message) {
+    return new Response(
+      JSON.stringify({ error: "Missing sessionId or message" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
+
+  const encoder = new TextEncoder();
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+
+  const send = (event: StreamEvent) => {
+    writer.write(encoder.encode(JSON.stringify(event) + "\n"));
+  };
+
+  // Run processing in background, streaming events as they occur
+  (async () => {
+    try {
+      const { schema, chatHistory } = getSession(sessionId);
+
+      const { updatedSchema, updatedHistory } = await processChat(
+        schema,
+        chatHistory,
+        message,
+        (event) => {
+          send(event);
+
+          // Also push schema updates via SSE so the page view updates live
+          if (event.type === "schema_update") {
+            publish(sessionId, { schema: event.schema });
+          }
+        }
+      );
+
+      // Persist final state
+      updateSchema(sessionId, updatedSchema);
+      updateChatHistory(sessionId, updatedHistory);
+
+      // Final SSE push for the completed schema
+      publish(sessionId, { schema: updatedSchema });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+      send({ type: "error", message });
+      send({ type: "done" });
+    } finally {
+      writer.close();
+    }
+  })();
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

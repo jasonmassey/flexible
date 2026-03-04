@@ -16,9 +16,19 @@ export interface PageSchema {
   root: ComponentNode;
 }
 
+export interface ThinkingStep {
+  type: "tool_call" | "tool_result" | "error";
+  name?: string;
+  input?: Record<string, any>;
+  result?: string;
+  success?: boolean;
+  message?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  thinking?: ThinkingStep[];
   timestamp: number;
 }

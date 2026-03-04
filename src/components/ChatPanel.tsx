@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { ChatMessage } from "@/lib/schema";
+import { ChatMessage, ThinkingStep } from "@/lib/schema";
+import { ThinkingBlock } from "./ThinkingBlock";
 
 interface ChatPanelProps {
   messages: ChatMessage[];
   input: string;
   isLoading: boolean;
+  thinkingSteps: ThinkingStep[];
   onInputChange: (value: string) => void;
   onSend: () => void;
   onReset: () => void;
@@ -16,6 +18,7 @@ export function ChatPanel({
   messages,
   input,
   isLoading,
+  thinkingSteps,
   onInputChange,
   onSend,
   onReset,
@@ -24,7 +27,7 @@ export function ChatPanel({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, thinkingSteps]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -51,6 +54,9 @@ export function ChatPanel({
           fontSize: "0.875rem",
           color: "#334155",
           backgroundColor: "#fff",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         Chat with AI
@@ -81,7 +87,7 @@ export function ChatPanel({
           gap: "0.75rem",
         }}
       >
-        {messages.length === 0 && (
+        {messages.length === 0 && !isLoading && (
           <div
             style={{
               textAlign: "center",
@@ -96,48 +102,62 @@ export function ChatPanel({
           </div>
         )}
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            style={{
-              display: "flex",
-              justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-            }}
-          >
+          <div key={msg.id} style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            {/* Thinking block for assistant messages */}
+            {msg.role === "assistant" && msg.thinking && msg.thinking.length > 0 && (
+              <div style={{ maxWidth: "90%" }}>
+                <ThinkingBlock steps={msg.thinking} isLive={false} />
+              </div>
+            )}
             <div
               style={{
-                maxWidth: "85%",
-                padding: "0.625rem 0.875rem",
-                borderRadius: "0.75rem",
-                fontSize: "0.875rem",
-                lineHeight: "1.5",
-                backgroundColor: msg.role === "user" ? "#6366f1" : "#fff",
-                color: msg.role === "user" ? "#fff" : "#334155",
-                border: msg.role === "assistant" ? "1px solid #e2e8f0" : "none",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
+                display: "flex",
+                justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
               }}
             >
-              {msg.content}
+              <div
+                style={{
+                  maxWidth: "85%",
+                  padding: "0.625rem 0.875rem",
+                  borderRadius: "0.75rem",
+                  fontSize: "0.875rem",
+                  lineHeight: "1.5",
+                  backgroundColor: msg.role === "user" ? "#6366f1" : "#fff",
+                  color: msg.role === "user" ? "#fff" : "#334155",
+                  border: msg.role === "assistant" ? "1px solid #e2e8f0" : "none",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {msg.content}
+              </div>
             </div>
           </div>
         ))}
+        {/* Live thinking block while processing */}
         {isLoading && (
-          <div style={{ display: "flex", justifyContent: "flex-start" }}>
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                borderRadius: "0.75rem",
-                backgroundColor: "#fff",
-                border: "1px solid #e2e8f0",
-                display: "flex",
-                alignItems: "center",
-                gap: "3px",
-              }}
-            >
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-            </div>
+          <div style={{ maxWidth: "90%" }}>
+            {thinkingSteps.length > 0 ? (
+              <ThinkingBlock steps={thinkingSteps} isLive={true} />
+            ) : (
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <div
+                  style={{
+                    padding: "0.75rem 1rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: "#fff",
+                    border: "1px solid #e2e8f0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "3px",
+                  }}
+                >
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div ref={messagesEndRef} />
