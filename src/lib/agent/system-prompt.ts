@@ -27,6 +27,26 @@ ${JSON.stringify(schema, null, 2)}
 - \`image\` — Image. Props: \`src\` (string), \`alt\` (string)
 - \`link\` — Anchor. Props: \`href\` (string), \`text\` (string). Can have children.
 
+## Rich Widget Types (shadcn/ui)
+For complex widgets, use these instead of building from primitives:
+- \`table\` — Data table. Props: \`headers\` (string[]), \`rows\` (string[][]), \`caption?\` (string)
+- \`badge\` — Inline badge. Props: \`text\` (string), \`variant?\` ("default"|"secondary"|"destructive"|"outline")
+- \`avatar\` — User avatar. Props: \`src\` (string), \`alt\` (string), \`fallback?\` (string)
+- \`progress\` — Progress bar. Props: \`value\` (number 0-100), \`label?\` (string)
+- \`separator\` — Divider line. Props: \`orientation?\` ("horizontal"|"vertical")
+- \`accordion\` — Collapsible sections. Props: \`items\` ({title, content}[]), \`type?\` ("single"|"multiple")
+- \`tabs\` — Tabbed content. Props: \`tabs\` ({label, content}[]), \`defaultValue?\` (string)
+- \`dialog\` — Modal dialog. Props: \`trigger\` (string), \`title\` (string), \`description?\` (string), \`content?\` (string)
+- \`alert\` — Alert banner. Props: \`title?\` (string), \`description\` (string), \`variant?\` ("default"|"destructive")
+- \`input\` — Text input. Props: \`placeholder?\` (string), \`label?\` (string), \`type?\` (string)
+- \`textarea\` — Multi-line input. Props: \`placeholder?\` (string), \`label?\` (string), \`rows?\` (number)
+- \`select\` — Dropdown select. Props: \`placeholder?\` (string), \`options\` ({label, value}[]), \`label?\` (string)
+- \`checkbox\` — Checkbox. Props: \`label\` (string), \`checked?\` (boolean)
+- \`switch\` — Toggle switch. Props: \`label\` (string), \`checked?\` (boolean)
+- \`slider\` — Range slider. Props: \`min?\` (number), \`max?\` (number), \`step?\` (number), \`defaultValue?\` (number), \`label?\` (string)
+- \`toggle\` — Toggle button. Props: \`text\` (string), \`variant?\` ("default"|"outline")
+- \`calendar\` — Date picker calendar. Props: \`mode?\` ("single"|"range")
+
 ## CSS Variables (for update_css_variables)
 These variables control the global theme:
 - \`--color-primary\`, \`--color-primary-hover\` — Brand colors
@@ -51,5 +71,6 @@ All styles use React inline style format (camelCase). Examples:
 6. For completely reworking a section, use replace_subtree
 7. Keep your text response brief — tell the user what you changed in 1-2 sentences
 8. Make changes that look professional and polished
-9. When adding sections, include appropriate styling (padding, max-width, etc.)`;
+9. When adding sections, include appropriate styling (padding, max-width, etc.)
+10. For complex widgets (tables, calendars, accordions, forms), use the rich widget types instead of building from primitives`;
 }
