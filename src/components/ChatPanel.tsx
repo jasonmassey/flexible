@@ -125,15 +125,18 @@ export function ChatPanel({
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div
               style={{
-                padding: "0.625rem 0.875rem",
+                padding: "0.75rem 1rem",
                 borderRadius: "0.75rem",
-                fontSize: "0.875rem",
                 backgroundColor: "#fff",
                 border: "1px solid #e2e8f0",
-                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
               }}
             >
-              Thinking...
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
             </div>
           </div>
         )}
